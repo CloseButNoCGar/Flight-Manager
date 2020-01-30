@@ -2,15 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Maps_test
 {
     public class LineItem : PolygonItem
     {
-        public double Bearing { get; private set; }
-
         public double Length { get; private set; }
 
         public override string Label
@@ -19,6 +15,11 @@ namespace Maps_test
             set { _label = "Line " + Id; }
         }
 
+        /// <summary>
+        /// Constructor when given 2 points.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="id"></param>
         public LineItem(IEnumerable<PointItem> p, int id) : base(p, id)
         {
             if (p.Count() != 2)
@@ -26,62 +27,61 @@ namespace Maps_test
                 throw new InvalidOperationException();
             }
 
-            CalculateBearing();
-            Length = DistanceBetweenPoints(PointItems[0], PointItems[1]);
+            Length = PointItems[0].DistanceBetweenPoints(PointItems[1]);
             RefreshChildren();
         }
 
-        public LineItem(PointItem q, double bearing, double deltalat, double deltalon, int id)
+        /// <summary>
+        /// Constructor for use when a point and bearing are known.
+        /// </summary>
+        /// <param name="q"></param>
+        /// <param name="deltalat"></param>
+        /// <param name="deltalon"></param>
+        /// <param name="id"></param>
+        public LineItem(PointItem q, double deltalat, double deltalon, int id)
         {
             Id = id;
             c = Color.Black;
-            Bearing = bearing;
             PointItems = new List<PointItem>();
             PointItems.Add(q);
             PointItem item;
-
-            item = new PointItem(q.Latitude + Math.Abs(deltalat), q.Longitude + Math.Abs(deltalon), 1);
+            Label = id.ToString();
+            item = new PointItem(q.Latitude + deltalat, q.Longitude + deltalon, 1);
             PointItems.Add(item);
-            Length = DistanceBetweenPoints(PointItems[0], PointItems[1]);
+            Length = PointItems[0].DistanceBetweenPoints(PointItems[1]);
             CreateGMapPolygon();
             RefreshChildren();
         }
 
-        private void CalculateBearing()
-        {
-            double X;
-            double Y;
-
-            //Let:      β be Bearing
-            //          θ be latitude
-            //          L be longitude
-            //          a denotes Point A
-            //          b denotes Point B
-            // Formula: β = atan2(X,Y)
-            // Where:   X = cos θb * sin ∆L
-            //          Y = cos θa * sin θb – sin θa * cos θb * cos ∆L
-            X = Math.Cos(PointItems[1].Latitude) * Math.Sin(PointItems[0].Longitude - PointItems[1].Longitude);
-            Y = Math.Cos(PointItems[0].Latitude) * Math.Sin(PointItems[1].Latitude)
-                - Math.Sin(PointItems[0].Latitude) * Math.Cos(PointItems[1].Latitude)
-                * Math.Cos(PointItems[0].Longitude - PointItems[1].Longitude);
-            Bearing = Math.Atan2(X, Y);
-        }
-
+        /// <summary>
+        /// Creates a list of camera trigger items. 
+        /// Limited to 500 max to not hang the program. 
+        /// If over 500 points for flight line it is 
+        /// likely the user has inputted wrong settings.
+        /// </summary>
+        /// <param name="ydistance"></param>
+        /// <param name="yoverlap"></param>
+        /// <param name="radius"></param>
+        /// <returns></returns>
         public List<CameraTrigger> CreateTriggerPoints(double ydistance, double yoverlap, double radius)
         {
+            const int maxTriggers = 500;
 
             double pointsNeeded = Math.Ceiling(Length / (ydistance - yoverlap));
-            if (pointsNeeded > 500)
+
+            if (pointsNeeded > maxTriggers)
             {
-                throw new Exception("Flightlines over cap, adjust camera settings or select a smaller area.");
+                throw new Exception("Number of triggers over cap, adjust camera settings or select a smaller area.");
             }
-            double latlength = Math.Abs(PointItems[0].Latitude - PointItems[1].Latitude);
-            double lonlength = Math.Abs(PointItems[0].Longitude - PointItems[1].Longitude);
+
+            double latlength = PointItems[1].Latitude - PointItems[0].Latitude;
+            double lonlength = PointItems[1].Longitude - PointItems[0].Longitude;
             double distanceBetweenPoints = Length / pointsNeeded;
             List<PointItem> list = new List<PointItem>();
             list.Add(PointItems[0]);
             double lat;
             double lng;
+
             for (int i = 0; i < pointsNeeded; i++)
             {
                 lng = list[i].Longitude + (lonlength / pointsNeeded);
@@ -91,9 +91,10 @@ namespace Maps_test
 
             List<CameraTrigger> triggers = new List<CameraTrigger>();
             int id = 0;
+
             foreach (var p in list)
             {
-                triggers.Add(new CameraTrigger(p, Bearing, radius, id));
+                triggers.Add(new CameraTrigger(p, radius, id));
                 id++;
             }
             return triggers;

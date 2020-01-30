@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 
 namespace Maps_test
 {
-    public interface ModelClass
+    /// <summary>
+    /// Interface for objects for use in TreeListView controls.
+    /// </summary>
+    public interface IModelClass
     {
         List<object> GetChildren();
         bool HasChildren();

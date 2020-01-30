@@ -1,19 +1,12 @@
 ﻿using GMap.NET;
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsForms;
-using GMap.NET.WindowsForms.Markers;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using System.Net;
-using System.Collections.ObjectModel;
 using BrightIdeasSoftware;
 using System.Collections;
 using System.Threading;
@@ -22,35 +15,44 @@ using System.IO;
 using CameraControl.Devices;
 using CameraControl.Devices.Classes;
 
-
 namespace Maps_test
 {
 
-    public partial class Form1 : Form
+    public partial class MainMapForm : Form
     {
-        private PointLatLng point;
+        // Initial map position variables
         private double lat = 0;
         private double lng = 0;
+        private PointLatLng point;
+        // Max, min and initial zoom level
         private int zoommax = 32;
         private int zoommin = 2;
-        private int zoomlevel = 2;
+        private int zoomlevel = 16;
+        // Overlays for map, to show polygons and markers
         private GMapOverlay markers = new GMapOverlay("markers");
         private GMapOverlay polygons = new GMapOverlay("polygons");
+        // Treelist roots
         private ArrayList roots = new ArrayList();
+        // TCP/IP connection variables and thread
         private static bool _connected = false;
         Thread gpsClientThread;
-        public static double _bearing;
+        // Variables for flightline input
+        public static double _gradient;
         public static double _xoverlap;
         public static double _xdistance;
         public static double _yoverlap;
         public static double _ydistance;
         public static double _radius;
+        // Camera control variables
         public CameraDeviceManager DeviceManager { get; set; }
         public string FolderForPhotos { get; set; }
+        // Triggers to compare, and have been taken
         List<CameraTrigger> globalTriggers = new List<CameraTrigger>();
+        List<CameraTrigger> capturedTriggers = new List<CameraTrigger>();
 
-        public Form1()
+        public MainMapForm()
         {
+            // Camera control events
             DeviceManager = new CameraDeviceManager();
             DeviceManager.CameraSelected += DeviceManager_CameraSelected;
             DeviceManager.CameraConnected += DeviceManager_CameraConnected;
@@ -58,53 +60,72 @@ namespace Maps_test
             DeviceManager.CameraDisconnected += DeviceManager_CameraDisconnected;
             DeviceManager.UseExperimentalDrivers = true;
             DeviceManager.DisableNativeDrivers = false;
+            // Path to save photos taken
             FolderForPhotos = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Map Test Photos");
+
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void MainMapForm_Load(object sender, EventArgs e)
         {
+            // Connect to camera
             DeviceManager.ConnectToCamera();
+            // Remove map center reticle
             map.ShowCenter = false;
-            //Set lat and long to a point
+            // Set the initial lat and lon to a point
             point = new PointLatLng(lat, lng);
-            populateCombo();
-            initialiseMap();
-            centerMapToPoint(point);
+            // Add all possible maps to combobox
+            PopulateCombo(comboBox1);
+            // Initialises the map control
+            InitialiseMap();
+            // Sets center of map to initial lat lon
+            CenterMapToPoint(point);
 
+            // TreeListView child expander functions
             treeListView1.CanExpandGetter = delegate (object x) 
             {
-                return ((ModelClass)x).HasChildren();
+                return ((IModelClass)x).HasChildren();
             };
             treeListView1.ChildrenGetter = delegate (object x) 
             {
-                return ((ModelClass)x).GetChildren();
+                return ((IModelClass)x).GetChildren();
             };
-
+            // Sets roots of the TreeListView
             treeListView1.Roots = roots;
         }
 
-        private void populateCombo()
+        /// <summary>
+        /// Populates a given combobox with all possible GMapProviders
+        /// </summary>
+        /// <param name="cmb"></param>
+        private void PopulateCombo(ComboBox cmb)
         {
             var type = typeof(GMapProviders);
+
             foreach (var p in type.GetFields())
             {
-                var v = p.GetValue(null) as GMapProvider;
-                if(v != null)
+                if (p.GetValue(null) is GMapProvider v)
                 {
-                    comboBox1.Items.Add(v);
+                    cmb.Items.Add(v);
                 }
             }
         }
 
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Event for combobox1 selected item change. Sets the map provider to the selected map
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox cmb = sender as ComboBox;
             map.MapProvider = cmb.SelectedItem as GMapProvider;
         }
        
-
-        private void initialiseMap()
+        /// <summary>
+        /// Initialises map control
+        /// </summary>
+        private void InitialiseMap()
         {
             //Set button that drags map
             map.DragButton = MouseButtons.Left;
@@ -114,51 +135,90 @@ namespace Maps_test
             map.Zoom = zoomlevel;
         }
 
-        private void centerMapToPoint(PointLatLng p)
+        /// <summary>
+        /// Sets the map position to a given point. 
+        /// Removes and readds the marker overlay to ensure 
+        /// markers are on top of polygons.
+        /// </summary>
+        /// <param name="p"></param>
+        private void CenterMapToPoint(PointLatLng p)
         {
             map.Overlays.Remove(markers);
             map.Overlays.Add(markers);
             map.Position = p;
         }
 
-        private void map_OnMapDrag()
+        /// <summary>
+        /// Event when map control is dragged.
+        /// Sets the point to center of map. 
+        /// Displays lat lon and altitude on form. 
+        /// </summary>
+        private void Map_OnMapDrag()
         {
             point = map.Position;
             toolStripStatusLabel1.Text = "Lat: " + point.Lat.ToString();
             toolStripStatusLabel2.Text = "Long: " + point.Lng.ToString();
-            toolStripStatusLabel3.Text = "Height above map: " + getAltitudeAboveMap().ToString() + "m";
+            toolStripStatusLabel3.Text = "Height above map: ~" + GetAltitudeAboveMap(map.Zoom).ToString() + "m";
         }
 
-        private void map_OnMapClick(PointLatLng PointClick, MouseEventArgs e)
+        /// <summary>
+        /// Event when map is clicked. 
+        /// Creates a new marker at location clicked, 
+        /// adds it to the treelistview and draws on the map
+        /// </summary>
+        /// <param name="PointClick"></param>
+        /// <param name="e"></param>
+        private void Map_OnMapClick(PointLatLng PointClick, MouseEventArgs e)
         {
             PointItem point = new PointItem(PointClick.Lat, PointClick.Lng, 1);
             point.DrawOnMap(map, polygons, markers);
             treeListView1.AddObject(point);
-            centerMapToPoint(map.Position);
+            CenterMapToPoint(map.Position);
         }
 
-        private void btnDeleteSelected_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Event for delete selected button.
+        /// Removes the root objects selected in the treelistview.
+        /// Redraws the map with current items.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtnDeleteSelected_Click(object sender, EventArgs e)
         {
             treeListView1.RemoveObjects(treeListView1.SelectedObjects);
             RedrawObjects();
         }
 
+        /// <summary>
+        /// Redraws the map with objects in the treelistview.
+        /// </summary>
         private void RedrawObjects()
         {
             map.Overlays.Clear();
             markers.Clear();
             polygons.Clear();
-            foreach(ModelClass i in treeListView1.Objects)
+
+            foreach (IModelClass i in treeListView1.Objects)
             {
                 i.DrawOnMap(map, polygons, markers);
             }
-            centerMapToPoint(map.Position);
+
+            CenterMapToPoint(map.Position);
         }
 
-        private void btnDrawPolygon_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Event for draw polygon button.
+        /// Gets all root points in treelistview and creates a 
+        /// polygon if more than 2 points, a line if exactly
+        /// 2 points, and nothing if there is 1 or less.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtnDrawPolygon_Click(object sender, EventArgs e)
         {
             List<PointItem> list = new List<PointItem>();
             object item;
+
             foreach (var o in treeListView1.Objects)
             {
                 if (o is PointItem)
@@ -166,6 +226,7 @@ namespace Maps_test
                     list.Add((PointItem)o);
                 }
             }
+
             if (list.Count > 1)
             {
                 if (list.Count == 2)
@@ -179,11 +240,14 @@ namespace Maps_test
                     ((PolygonItem)item).DrawOnMap(map, polygons, markers);
                 }
                 treeListView1.AddObject(item);
-                centerMapToPoint(map.Position);
+                CenterMapToPoint(map.Position);
                 treeListView1.RemoveObjects(list);
             }
         }
 
+        /// <summary>
+        /// Constants for wind info retrieval
+        /// </summary>
         public static class RequestConstants
         {
             public const string Url = "http://api.openweathermap.org/data/2.5/weather?lat=";
@@ -192,7 +256,12 @@ namespace Maps_test
             public const string UserAgentValue = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0";
         }
 
-        private Tuple<double, double> getWindSpeedDirection(PointLatLng p)
+        /// <summary>
+        /// Gets the weather at a given point and parses out the wind information from JSON.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        private Tuple<double, double> GetWindSpeedDirection(PointLatLng p)
         {
             var client = new WebClient();
             client.Headers.Add(RequestConstants.UserAgent, RequestConstants.UserAgentValue);
@@ -207,40 +276,35 @@ namespace Maps_test
             return tuple;
         }
 
-        private void btnWind_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Gets wind info and sets it to form controls.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtnWind_Click(object sender, EventArgs e)
         {
-            Tuple<double, double> t = getWindSpeedDirection(map.Position);
+            Tuple<double, double> t = GetWindSpeedDirection(map.Position);
             lblWindSpeed.Text = t.Item1.ToString();
             lblWindDirect.Text = t.Item2.ToString();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Form2 f2 = new Form2();
-            foreach (var i in treeListView1.SelectedObjects)
-            {
-                if (i is PolygonItem)
-                {
-                    DialogResult result = f2.ShowDialog(this);
-                    if (result == DialogResult.OK)
-                    {
-                        ((PolygonItem)i).CreateFlightLines(_bearing, _xoverlap, _xdistance, _yoverlap, _ydistance, _radius, map, polygons, markers);
-                    }
-                }
-            }
-            
-        }
-
+        /// <summary>
+        /// Function to start the GPSClient.
+        /// Adjusts button control to give information of status.
+        /// Gets IP connection address from textboxes.
+        /// </summary>
         private void GPSClientStart()
         {
-                Invoke(new Action(() =>
-                {
-                    butTCPConnection.Text = "Working...";
-                    butTCPConnection.BackColor = Color.Orange;
-                }));
+            Invoke(new Action(() =>
+            {
+                butTCPConnection.Text = "Working...";
+                butTCPConnection.BackColor = Color.Orange;
+            }));
+
             try
             {
-                TcpClient client = new TcpClient(textBox1.Text + "." + textBox2.Text + "." + textBox3.Text + "." + textBox5.Text, 6000);
+                TcpClient client = new TcpClient($"{textBox1.Text}.{textBox2.Text}.{textBox3.Text}.{textBox5.Text}", 8000);
+
                 Invoke(new Action(() =>
                 {
                     butTCPConnection.Text = "Connected";
@@ -255,7 +319,6 @@ namespace Maps_test
                     butTCPConnection.Text = "Disconnected";
                     butTCPConnection.BackColor = Color.Red;
                 }));
-
             }
             catch
             {
@@ -263,17 +326,24 @@ namespace Maps_test
                 {
                     butTCPConnection.Text = "Error";
                 }));
+
                 Thread.Sleep(2000);
+
                 Invoke(new Action(() =>
                 {
                     butTCPConnection.Text = "Disconnected";
                     butTCPConnection.BackColor = Color.Red;
                 }));
-
             }
-            
         }
 
+        /// <summary>
+        /// Function to read line from tcp/ip connection.
+        /// Compares to all camera triggers. If the GPS 
+        /// coordinate is close enough to the trigger the camera
+        /// is triggered and the camera point changes from red to green.
+        /// </summary>
+        /// <param name="client"></param>
         public void Read(TcpClient client)
         {
             try
@@ -283,18 +353,36 @@ namespace Maps_test
                     try
                     {
                         StreamReader reader = new StreamReader(client.GetStream());
-                        string line = reader.ReadLine();
-                        Console.WriteLine(line);
-
-                        foreach (var i in globalTriggers)
+                        string delimited = reader.ReadLine();
+                        NMEAHandler handler = new NMEAHandler(delimited.Split(','));
+                        System.Diagnostics.Debug.WriteLine(delimited);
+                        if (handler.ValidSentence())
                         {
-                            Console.WriteLine(i.Label);
+                            foreach (var i in globalTriggers)
+                            {
+                                double j = i.Point.DistanceBetweenPoints(handler.Point);
+
+                                if (j < _radius)
+                                {
+                                    Thread thread = new Thread(Capture);
+                                    thread.Start();
+
+                                    globalTriggers.Remove(i);
+                                    capturedTriggers.Add(i);
+                                    break;
+                                }
+                            }
                         }
 
+                        Invoke(new Action(() => GreenTrigger()));
                     }
                     catch (EndOfStreamException)
                     {
                         return;
+                    }
+                    catch (NullReferenceException)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Happening here");
                     }
                 }
             }
@@ -304,32 +392,81 @@ namespace Maps_test
             }
         }
 
-        private void butTCPConnection_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Changes all triggers that have been captured from green to red.
+        /// </summary>
+        private void GreenTrigger()
         {
+            MethodInvoker method = delegate
+            {
+                foreach (var i in treeListView1.Objects)
+                {
+                    if (i is PolygonItem)
+                    {
+                        foreach (var j in capturedTriggers)
+                        {
+                            ((PolygonItem)i).ChangeTrigger(j);
+                        }
+                    }
+                }
 
+                RedrawObjects();
+            };
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(method);
+            }
+            else
+            {
+                method.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Starts GPSClient thread if not already to connected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ButTCPConnection_Click(object sender, EventArgs e)
+        {
             if (!_connected)
             {
                 _connected = true;
-                gpsClientThread = new Thread(() => GPSClientStart());
-                gpsClientThread.IsBackground = true;
+                gpsClientThread = new Thread(() => GPSClientStart())
+                {
+                    IsBackground = true
+                };
                 gpsClientThread.Start();
             }
             else
             {
                 _connected = false;
             }
-            
         }
 
-        private void treeListView1_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        /// <summary>
+        /// Changes the displayed item in the 
+        /// objectlistview to selected items in treelistview
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TreeListView1_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             objectListView1.ClearObjects();
             objectListView1.AddObjects(treeListView1.SelectedObjects);
         }
 
-        private void button1_Click_1(object sender, EventArgs e)
+        /// <summary>
+        /// Event for adding flightlines to polygon.
+        /// Opens a dialog to retrieve settings for 
+        /// creating flightlines and then creates them.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Button1_Click_1(object sender, EventArgs e)
         {
-            Form2 f2 = new Form2();
+            CameraViewSettingsForm f2 = new CameraViewSettingsForm();
             foreach (var i in treeListView1.SelectedObjects)
             {
                 if (i is PolygonItem)
@@ -338,7 +475,7 @@ namespace Maps_test
                     {
                         try
                         {
-                            ((PolygonItem)i).CreateFlightLines(_bearing, _xoverlap, _xdistance, _yoverlap, _ydistance, _radius, map, polygons, markers);
+                            ((PolygonItem)i).CreateFlightLines(_gradient, _xoverlap, _xdistance, _yoverlap, _ydistance, _radius, map, polygons, markers);
                         }
                         catch (Exception f)
                         {
@@ -349,9 +486,16 @@ namespace Maps_test
                     }
                 }
             }
-            treeListView1_ItemsChanged(treeListView1, new ItemsChangedEventArgs());
+
+            TreeListView1_ItemsChanged(treeListView1, new ItemsChangedEventArgs());
+            RedrawObjects();
         }
 
+        /// <summary>
+        /// Close the application handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.UserClosing)
@@ -372,6 +516,9 @@ namespace Maps_test
             }
         }
 
+        /// <summary>
+        /// Camera combobox updater with connected cameras
+        /// </summary>
         private void RefreshDisplay()
         {
             MethodInvoker method = delegate
@@ -393,6 +540,10 @@ namespace Maps_test
                 method.Invoke();
         }
 
+        /// <summary>
+        /// Camera capture handler, retrys 
+        /// taking the photo if device is busy.
+        /// </summary>
         private new void Capture()
         {
             bool retry;
@@ -422,6 +573,10 @@ namespace Maps_test
             } while (retry);
         }
 
+        /// <summary>
+        /// Method to save captured photos to file
+        /// </summary>
+        /// <param name="o"></param>
         private void PhotoCaptured(object o)
         {
             PhotoCapturedEventArgs eventArgs = o as PhotoCapturedEventArgs;
@@ -433,8 +588,8 @@ namespace Maps_test
             try
             {
                 string fileName = Path.Combine(FolderForPhotos, Path.GetFileName(eventArgs.FileName));
-                // if file exist try to generate a new filename to prevent file lost. 
-                // This useful when camera is set to record in ram the the all file names are same.
+                // If file exist try to generate a new filename to prevent file lost. 
+                // This is useful when camera is set to record in ram and the all file names are same.
                 if (File.Exists(fileName))
                     fileName =
                       StaticHelper.GetUniqueFilename(
@@ -449,11 +604,11 @@ namespace Maps_test
                 eventArgs.CameraDevice.TransferFile(eventArgs.Handle, fileName);
                 // the IsBusy may used internally, if file transfer is done should set to false  
                 eventArgs.CameraDevice.IsBusy = false;
+                // Only display non RAW images
                 if (Path.GetExtension(fileName) == ".NEF")
                 { }
                 else
                 pictureBox1.ImageLocation = fileName;
-
             }
             catch (Exception exception)
             {
@@ -462,63 +617,90 @@ namespace Maps_test
             }
         }
 
+        /// <summary>
+        /// Unused. Required for swapping connected cameras
+        /// </summary>
+        /// <param name="oldcameraDevice"></param>
+        /// <param name="newcameraDevice"></param>
         void DeviceManager_CameraSelected(ICameraDevice oldcameraDevice, ICameraDevice newcameraDevice)
         {
 
         }
 
+        /// <summary>
+        /// When a new camera is connected the display refreshes.
+        /// </summary>
+        /// <param name="cameraDevice"></param>
         void DeviceManager_CameraConnected(ICameraDevice cameraDevice)
         {
             RefreshDisplay();
         }
 
+        /// <summary>
+        /// When a photo is taken from the selected camera handles on a new thread.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
         void DeviceManager_PhotoCaptured(object sender, PhotoCapturedEventArgs eventArgs)
         {
             Thread thread = new Thread(PhotoCaptured);
             thread.Start(eventArgs);
         }
 
+        /// <summary>
+        /// When a camera is disconnected refreshes the display.
+        /// </summary>
+        /// <param name="cameraDevice"></param>
         void DeviceManager_CameraDisconnected(ICameraDevice cameraDevice)
         {
             RefreshDisplay();
         }
 
-        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Camera device combobox selection handler.
+        /// Sets camera device to selected option.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ComboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
             DeviceManager.SelectedCameraDevice = (ICameraDevice)comboBox2.SelectedItem;
         }
 
-        private float getAltitudeAboveMap()
+        /// <summary>
+        /// Calculates how high the camera is at the given zoom level using google
+        /// </summary>
+        /// <returns></returns>
+        private float GetAltitudeAboveMap(double zoomlevel)
         {
             float googleearthaltitude;
-            float firstPartOfEq = (float)(.05 * (591657550.5 / Math.Pow(2, map.Zoom - 1) / 2));
+            float firstPartOfEq = (float)(.05 * (591657550.5 / Math.Pow(2, zoomlevel - 1) / 2));
             googleearthaltitude = firstPartOfEq * ((float)Math.Cos(85.362 / 2 * Math.PI / 180) / ((float)Math.Sin(85.362 / 2 * Math.PI / 180)));
             return googleearthaltitude;
         }
 
-        private void butCamera_MouseClick(object sender, MouseEventArgs e)
+        /// <summary>
+        /// Manual camera capture button event handler.
+        /// Starts camera capture on new thread.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ButCamera_Click(object sender, EventArgs e)
         {
             Thread thread = new Thread(Capture);
             thread.Start();
         }
 
-        public double DistanceBetweenPoints(PointItem p, PointItem q)
-        {
-            var latrad1 = p.Latitude * Math.PI / 180;
-            var lonrad1 = p.Longitude * Math.PI / 180;
-            var latrad2 = q.Latitude * Math.PI / 180;
-            var lonrad2 = q.Longitude * Math.PI / 180;
-            var deltalat = (q.Latitude - p.Latitude) * Math.PI / 180;
-            var deltalon = (q.Longitude - p.Longitude) * Math.PI / 180;
-            double a = Math.Sin(deltalat / 2) * Math.Sin(deltalat / 2) + Math.Cos(latrad1) * Math.Cos(latrad2) * Math.Sin(deltalon / 2) * Math.Sin(deltalon / 2);
-            double distance = 6371e3 * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-            return distance;
-        }
-
-        private void treeListView1_ItemsChanged(object sender, ItemsChangedEventArgs e)
+        /// <summary>
+        /// Handler for when items are added or removed from the treelistview. 
+        /// Updates global list of camera triggers.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TreeListView1_ItemsChanged(object sender, ItemsChangedEventArgs e)
         {
             List<CameraTrigger> list = new List<CameraTrigger>();
-            Console.WriteLine("updated");
+
             foreach (var i in treeListView1.Objects)
             {
                 if (i is PolygonItem)
@@ -527,14 +709,14 @@ namespace Maps_test
                     {
                         foreach (var k in j.Triggers)
                         {
+                            if (!k.Captured)
                             list.Add(k);
                         }
                     }
                 }
-                
             }
-            globalTriggers = list;
 
+            globalTriggers = list;
         }
     }
 }

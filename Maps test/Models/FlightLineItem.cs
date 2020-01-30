@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Maps_test
 {
-    public class FlightLineItem : ModelClass
+    public class FlightLineItem : IModelClass
     {
         private LineItem _line;
         private List<CameraTrigger> _triggers;
@@ -43,11 +43,18 @@ namespace Maps_test
             Label = id.ToString();
         }
 
+        /// <summary>
+        /// Resizes the flight line to the given polygon (usually parent).
+        /// Find if trigger points are over polygon. If they are then the 
+        /// previous trigger and next trigger will be kept. Removes any 
+        /// that are not over polygon or not next to one that is over polygon.
+        /// </summary>
+        /// <param name="p"></param>
         public void ResizeToPoly(PolygonItem p)
         {
             bool mem1 = false;
             bool mem2 = true;
-            List<int> indexestoremove = new List<int>();
+            List<int> indexesToRemove = new List<int>();
 
             for (int i = Triggers.Count - 1; i > -1; i--)
             {
@@ -70,11 +77,7 @@ namespace Maps_test
             {
                 Triggers.RemoveAt(0);
             }
-            if (Triggers.Count == 0)
-            {
-
-            }
-            else
+            if (Triggers.Count != 0)
             {
                 Line.PointItems[0] = Triggers[0].Point;
                 Line.PointItems[1] = Triggers.Last().Point;

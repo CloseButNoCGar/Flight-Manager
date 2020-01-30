@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maps test", "Maps test\Maps test.csproj", "{23F329FC-118A-401A-82F7-CC7BE75800FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maps test.UnitTests", "Mapstest.UnitTests\Maps test.UnitTests.csproj", "{295CF894-3506-47E2-B011-1EBE08A26D5F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,14 @@ Global
 		{23F329FC-118A-401A-82F7-CC7BE75800FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{23F329FC-118A-401A-82F7-CC7BE75800FA}.Release|x86.ActiveCfg = Release|x86
 		{23F329FC-118A-401A-82F7-CC7BE75800FA}.Release|x86.Build.0 = Release|x86
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Debug|x86.Build.0 = Debug|Any CPU
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Release|x86.ActiveCfg = Release|Any CPU
+		{295CF894-3506-47E2-B011-1EBE08A26D5F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

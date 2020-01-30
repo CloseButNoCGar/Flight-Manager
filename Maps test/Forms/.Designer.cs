@@ -1,6 +1,6 @@
 ﻿namespace Maps_test
 {
-    partial class Form2
+    partial class CameraViewSettingsForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form2));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CameraViewSettingsForm));
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtFlightLines = new System.Windows.Forms.TextBox();
             this.trackBar1 = new System.Windows.Forms.TrackBar();

@@ -1,6 +1,6 @@
 ﻿namespace Maps_test
 {
-    partial class Form1
+    partial class MainMapForm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainMapForm));
             this.map = new GMap.NET.WindowsForms.GMapControl();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.btnDeleteAllMarkers = new System.Windows.Forms.Button();
@@ -110,8 +110,8 @@
             this.map.Size = new System.Drawing.Size(586, 512);
             this.map.TabIndex = 1;
             this.map.Zoom = 2D;
-            this.map.OnMapClick += new GMap.NET.WindowsForms.MapClick(this.map_OnMapClick);
-            this.map.OnMapDrag += new GMap.NET.MapDrag(this.map_OnMapDrag);
+            this.map.OnMapClick += new GMap.NET.WindowsForms.MapClick(this.Map_OnMapClick);
+            this.map.OnMapDrag += new GMap.NET.MapDrag(this.Map_OnMapDrag);
             // 
             // comboBox1
             // 
@@ -121,7 +121,7 @@
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(90, 21);
             this.comboBox1.TabIndex = 9;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.ComboBox1_SelectedIndexChanged);
             // 
             // btnDeleteAllMarkers
             // 
@@ -131,7 +131,7 @@
             this.btnDeleteAllMarkers.TabIndex = 11;
             this.btnDeleteAllMarkers.Text = "Delete Item";
             this.btnDeleteAllMarkers.UseVisualStyleBackColor = true;
-            this.btnDeleteAllMarkers.Click += new System.EventHandler(this.btnDeleteSelected_Click);
+            this.btnDeleteAllMarkers.Click += new System.EventHandler(this.BtnDeleteSelected_Click);
             // 
             // btnDrawPolygon
             // 
@@ -141,7 +141,7 @@
             this.btnDrawPolygon.TabIndex = 12;
             this.btnDrawPolygon.Text = "Draw Polygon";
             this.btnDrawPolygon.UseVisualStyleBackColor = true;
-            this.btnDrawPolygon.Click += new System.EventHandler(this.btnDrawPolygon_Click);
+            this.btnDrawPolygon.Click += new System.EventHandler(this.BtnDrawPolygon_Click);
             // 
             // btnWind
             // 
@@ -151,7 +151,7 @@
             this.btnWind.TabIndex = 16;
             this.btnWind.Text = "Get Wind";
             this.btnWind.UseVisualStyleBackColor = true;
-            this.btnWind.Click += new System.EventHandler(this.btnWind_Click);
+            this.btnWind.Click += new System.EventHandler(this.BtnWind_Click);
             // 
             // treeListView1
             // 
@@ -171,8 +171,8 @@
             this.treeListView1.UseCompatibleStateImageBehavior = false;
             this.treeListView1.View = System.Windows.Forms.View.Details;
             this.treeListView1.VirtualMode = true;
-            this.treeListView1.ItemsChanged += new System.EventHandler<BrightIdeasSoftware.ItemsChangedEventArgs>(this.treeListView1_ItemsChanged);
-            this.treeListView1.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.treeListView1_ItemSelectionChanged);
+            this.treeListView1.ItemsChanged += new System.EventHandler<BrightIdeasSoftware.ItemsChangedEventArgs>(this.TreeListView1_ItemsChanged);
+            this.treeListView1.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.TreeListView1_ItemSelectionChanged);
             // 
             // Label
             // 
@@ -257,7 +257,7 @@
             this.butTCPConnection.TabIndex = 23;
             this.butTCPConnection.Text = "Disconnected";
             this.butTCPConnection.UseVisualStyleBackColor = false;
-            this.butTCPConnection.Click += new System.EventHandler(this.butTCPConnection_Click);
+            this.butTCPConnection.Click += new System.EventHandler(this.ButTCPConnection_Click);
             // 
             // groupBox1
             // 
@@ -315,7 +315,7 @@
             this.button1.TabIndex = 28;
             this.button1.Text = "Flight Lines";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click_1);
+            this.button1.Click += new System.EventHandler(this.Button1_Click_1);
             // 
             // pictureBox1
             // 
@@ -346,7 +346,7 @@
             this.butCamera.TabIndex = 31;
             this.butCamera.Text = "Manual Capture";
             this.butCamera.UseVisualStyleBackColor = true;
-            this.butCamera.MouseClick += new System.Windows.Forms.MouseEventHandler(this.butCamera_MouseClick);
+            this.butCamera.Click += new System.EventHandler(this.ButCamera_Click);
             // 
             // groupBox2
             // 
@@ -498,7 +498,7 @@
             this.Name = "Form1";
             this.Text = "Flight Mission Control";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.MainMapForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.treeListView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.objectListView1)).EndInit();
             this.statusStrip1.ResumeLayout(false);

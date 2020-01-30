@@ -139,31 +139,33 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CameraTrigger.cs" />
-    <Compile Include="FlightLineItem.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="Models\CameraTrigger.cs" />
+    <Compile Include="Models\FlightLineItem.cs" />
+    <Compile Include="Forms\MainMapForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="Forms\MainMapForm.Designer.cs">
+      <DependentUpon>MainMapForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Form2.cs">
+    <Compile Include="Forms\CameraViewSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form2.Designer.cs">
-      <DependentUpon>Form2.cs</DependentUpon>
+    <Compile Include="Forms\.Designer.cs">
+      <DependentUpon>CameraViewSettingsForm.cs</DependentUpon>
+      <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ModelClass.cs" />
-    <Compile Include="LineItem.cs" />
-    <Compile Include="PointItem.cs" />
-    <Compile Include="PolygonItem.cs" />
+    <Compile Include="Models\ModelClass.cs" />
+    <Compile Include="Models\LineItem.cs" />
+    <Compile Include="Handlers\NMEAHandler.cs" />
+    <Compile Include="Models\PointItem.cs" />
+    <Compile Include="Models\PolygonItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\MainMapForm.resx">
+      <DependentUpon>MainMapForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Form2.resx">
-      <DependentUpon>Form2.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\CameraViewSettingsForm.resx">
+      <DependentUpon>CameraViewSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

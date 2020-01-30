@@ -9,19 +9,38 @@ using System.Threading.Tasks;
 
 namespace Maps_test
 {
-    public class CameraTrigger : ModelClass
+    public class CameraTrigger : IModelClass
     {
         private string _label;
+
+        private bool _captured;
+
+        private GMarkerGoogleType mark;
 
         public PointItem Point { get; set; }
 
         public List<object> Child { get; set; }
 
-        private double Bearing { get; set; }
-
         public double Radius { get; set; }
 
         public int Id { get; set; }
+
+        public bool Captured
+        {
+            get { return _captured; }
+            set
+            {
+                _captured = value;
+                if (_captured)
+                {
+                    mark = GMarkerGoogleType.green_small;
+                }
+                else
+                {
+                    mark = GMarkerGoogleType.red_small;
+                }
+            }
+        }
 
         public string Label
         {
@@ -29,15 +48,15 @@ namespace Maps_test
             set { _label = "Trigger " + Id; }
         }
 
-        public CameraTrigger(PointItem point, double bearing, double radius, int id)
+        public CameraTrigger(PointItem point, double radius, int id)
         {
             Point = point;
-            Bearing = bearing;
             Radius = radius;
             Id = id;
             Label = Id.ToString();
             Child = new List<object>();
             Child.Add(Point);
+            Captured = false;
         }
 
         public bool IsOverPolygon(PolygonItem p)
@@ -62,7 +81,7 @@ namespace Maps_test
 
         public void DrawOnMap(GMapControl map, GMapOverlay polygons, GMapOverlay markers)
         {
-            GMapMarker marker = new GMarkerGoogle(Point.Coords, GMarkerGoogleType.red_dot);
+            GMapMarker marker = new GMarkerGoogle(Point.Coords, mark);
             map.Overlays.Remove(markers);
             markers.Markers.Add(marker);
             map.Overlays.Add(markers);
