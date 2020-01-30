@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Maps_test
+namespace FlightManager
 {
     public class FlightLineItem : IModelClass
     {

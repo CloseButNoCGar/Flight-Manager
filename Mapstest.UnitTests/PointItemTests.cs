@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Maps_test.UnitTests
+namespace FlightManager.UnitTests
 {
     [TestClass]
     public class PointItemTests

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Maps_test
+namespace FlightManager
 {
     class NMEAHandler
     {

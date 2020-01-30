@@ -15,7 +15,7 @@ using System.IO;
 using CameraControl.Devices;
 using CameraControl.Devices.Classes;
 
-namespace Maps_test
+namespace FlightManager
 {
 
     public partial class MainMapForm : Form

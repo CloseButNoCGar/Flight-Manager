@@ -1,4 +1,4 @@
-﻿namespace Maps_test
+﻿namespace FlightManager
 {
     partial class MainMapForm
     {
@@ -486,7 +486,7 @@
             this.splitContainer1.SplitterDistance = 588;
             this.splitContainer1.TabIndex = 36;
             // 
-            // Form1
+            // MainMapForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -495,8 +495,8 @@
             this.Controls.Add(this.statusStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "Form1";
-            this.Text = "Flight Mission Control";
+            this.Name = "MainMapForm";
+            this.Text = "Flight Manager";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.MainMapForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.treeListView1)).EndInit();

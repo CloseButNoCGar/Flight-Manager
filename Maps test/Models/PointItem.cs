@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace Maps_test
+namespace FlightManager
 {
     public class PointItem : IModelClass
     {

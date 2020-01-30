@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace Maps_test
+namespace FlightManager
 {
     public class PolygonItem : IModelClass
     {
