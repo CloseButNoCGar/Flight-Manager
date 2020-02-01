@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlightManager", "Maps test\FlightManager.csproj", "{23F329FC-118A-401A-82F7-CC7BE75800FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlightManager", "FlightManager\FlightManager.csproj", "{23F329FC-118A-401A-82F7-CC7BE75800FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlightManager.UnitTests", "Mapstest.UnitTests\FlightManager.UnitTests.csproj", "{295CF894-3506-47E2-B011-1EBE08A26D5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlightManager.UnitTests", "FlightManager.UnitTests\FlightManager.UnitTests.csproj", "{295CF894-3506-47E2-B011-1EBE08A26D5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

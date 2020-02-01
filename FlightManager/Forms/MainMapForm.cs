@@ -34,7 +34,7 @@ namespace FlightManager
         // Treelist roots
         private ArrayList roots = new ArrayList();
         // TCP/IP connection variables and thread
-        private static bool _connected = false;
+        private volatile bool _connected = false;
         Thread gpsClientThread;
         // Variables for flightline input
         public static double _gradient;
@@ -97,7 +97,7 @@ namespace FlightManager
         /// <summary>
         /// Populates a given combobox with all possible GMapProviders
         /// </summary>
-        /// <param name="cmb"></param>
+        /// <param name="cmb">Combobox to populate</param>
         private void PopulateCombo(ComboBox cmb)
         {
             var type = typeof(GMapProviders);
@@ -140,7 +140,7 @@ namespace FlightManager
         /// Removes and readds the marker overlay to ensure 
         /// markers are on top of polygons.
         /// </summary>
-        /// <param name="p"></param>
+        /// <param name="p">Point to center map to</param>
         private void CenterMapToPoint(PointLatLng p)
         {
             map.Overlays.Remove(markers);
@@ -166,7 +166,7 @@ namespace FlightManager
         /// Creates a new marker at location clicked, 
         /// adds it to the treelistview and draws on the map
         /// </summary>
-        /// <param name="PointClick"></param>
+        /// <param name="PointClick">Point coordinate of click</param>
         /// <param name="e"></param>
         private void Map_OnMapClick(PointLatLng PointClick, MouseEventArgs e)
         {
@@ -259,7 +259,7 @@ namespace FlightManager
         /// <summary>
         /// Gets the weather at a given point and parses out the wind information from JSON.
         /// </summary>
-        /// <param name="p"></param>
+        /// <param name="p">Point coordinate to get weather data for</param>
         /// <returns></returns>
         private Tuple<double, double> GetWindSpeedDirection(PointLatLng p)
         {
@@ -349,35 +349,38 @@ namespace FlightManager
             try
             {
                 while (_connected)
-                {
+                {                    
                     try
                     {
                         StreamReader reader = new StreamReader(client.GetStream());
-                        string delimited = reader.ReadLine();
-                        NMEAHandler handler = new NMEAHandler(delimited.Split(','));
-                        System.Diagnostics.Debug.WriteLine(delimited);
-                        if (handler.ValidSentence())
+                        if (!reader.EndOfStream)
                         {
-                            foreach (var i in globalTriggers)
+                            string delimited = reader.ReadLine();
+                            NMEAHandler handler = new NMEAHandler(delimited.Split(','));
+                            System.Diagnostics.Debug.WriteLine(delimited);
+                            if (handler.ValidSentence())
                             {
-                                double j = i.Point.DistanceBetweenPoints(handler.Point);
-
-                                if (j < _radius)
+                                foreach (var i in globalTriggers)
                                 {
-                                    Thread thread = new Thread(Capture);
-                                    thread.Start();
+                                    double j = i.Point.DistanceBetweenPoints(handler.Point);
 
-                                    globalTriggers.Remove(i);
-                                    capturedTriggers.Add(i);
-                                    break;
+                                    if (j < _radius)
+                                    {
+                                        Thread thread = new Thread(Capture);
+                                        thread.Start();
+
+                                        globalTriggers.Remove(i);
+                                        capturedTriggers.Add(i);
+                                        break;
+                                    }
                                 }
                             }
+                            Invoke(new Action(() => GreenTrigger()));
                         }
-
-                        Invoke(new Action(() => GreenTrigger()));
                     }
                     catch (EndOfStreamException)
                     {
+                        System.Diagnostics.Debug.WriteLine("wahwow");
                         return;
                     }
                     catch (NullReferenceException)
